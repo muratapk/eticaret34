@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using eticaret34.Data;
 using eticaret34.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace eticaret34.Controllers
 {
@@ -48,7 +49,7 @@ namespace eticaret34.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryId");
+            ViewBag.katelist = new SelectList(_context.Categories, "CategoryId", "CategoryName");
             return View();
         }
 
@@ -57,9 +58,22 @@ namespace eticaret34.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,ProductName,ProductCode,ProductPrice,ProductDescription,ProductPicture,CategoryId")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,ProductName,ProductCode,ProductPrice,ProductDescription,ProductPicture,CategoryId")] Product product,IFormFile ResimYukle)
         {
-            if (ModelState.IsValid)
+
+            string uzanti = Path.GetExtension(ResimYukle.FileName);
+            //resim.jpg .jpg uzantısın burada aldım
+            var randomisim = Guid.NewGuid().ToString() + uzanti;
+            //yuklenecek resme yeniden isim vermiş oldum
+            var yol = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/urunler/", randomisim);
+            using (var straem = new FileStream(yol, FileMode.Create))
+            {
+                await ResimYukle.CopyToAsync(straem);
+            }
+            //bu kodla resim yuklemiş olduk
+            product.ProductPicture = randomisim;
+
+            if (!ModelState.IsValid)
             {
                 _context.Add(product);
                 await _context.SaveChangesAsync();
@@ -77,6 +91,9 @@ namespace eticaret34.Controllers
                 return NotFound();
             }
 
+
+            ViewBag.katelist = new SelectList(_context.Categories, "CategoryId", "CategoryName");
+
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
@@ -91,11 +108,27 @@ namespace eticaret34.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,ProductCode,ProductPrice,ProductDescription,ProductPicture,CategoryId")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,ProductCode,ProductPrice,ProductDescription,ProductPicture,CategoryId")] Product product, IFormFile ResimYukle)
         {
             if (id != product.ProductId)
             {
                 return NotFound();
+            }
+
+            if(ResimYukle!= null)
+            {
+                string uzanti = Path.GetExtension(ResimYukle.FileName);
+                //resim.jpg .jpg uzantısın burada aldım
+                var randomisim = Guid.NewGuid().ToString() + uzanti;
+                //yuklenecek resme yeniden isim vermiş oldum
+                var yol = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/urunler/", randomisim);
+                using (var straem = new FileStream(yol, FileMode.Create))
+                {
+                    await ResimYukle.CopyToAsync(straem);
+                }
+                //bu kodla resim yuklemiş olduk
+                product.ProductPicture = randomisim;
+
             }
 
             if (ModelState.IsValid)

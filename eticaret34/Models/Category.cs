@@ -10,9 +10,9 @@ namespace eticaret34.Models
 
         [Required(ErrorMessage ="Kategori Adını Boş Bıramazsınız")]
         [Display(Name = "Kategori Adı")]
-        public string CategoryName { get; set; }
+        public string? CategoryName { get; set; }
 
-        virtual public ICollection<Product> Products { get; set; }
+        virtual public ICollection<Product>? Products { get; set; }
 
     }
 }
